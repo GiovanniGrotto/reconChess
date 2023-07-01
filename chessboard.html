@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        .container {
+	    color: white;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            height: 100vh;
+            padding-left: 20px;
+	    background-color: #2a2a2b
+        }
+        
+        .chessboard {
+	    margin: 100px;
+            width: 800px;
+            height: 800px;
+            display: flex;
+            flex-wrap: wrap;
+        }
+        
+        .square {
+            width: 100px;
+            height: 100px;
+            position: relative;
+	    color: red;
+        }
+	
+	.white {
+            background-color: white;
+        }
+        
+        .black {
+            background-color: gray;
+        }
+        
+        .piece {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0 px;
+            left: 0 px;
+        }
+
+	.button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #e9e9e9;
+            border: none;
+            outline: none;
+            transition: background-color 0.3s;
+        }
+
+	.variable-text {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+	<div>
+            <h2>Upload Piece Positions</h2>
+            <input type="file" id="fileInput">
+        </div>
+        <div class="chessboard" id="chessboard"></div>
+	<div>
+            <button id="previousBtn" class="button"><<</button>
+            <button id="nextBtn"class="button">>></button>
+	    <div class="variable-text" id="index"></div>
+	    <div class="variable-text" id="boards"></div>
+        </div>
+    </div>
+
+    <script>
+	var piecePositions = [];
+	var check = [];
+	var possibilities = [];
+	var boxPosition = [];
+        var currentIndex = 0;
+	var color = ''
+
+        // Function to render the chessboard
+        function renderChessboard() {
+	    var variableText = document.getElementById('index');
+       	    variableText.textContent = 'Current Index: ' + currentIndex;
+	    var variableText = document.getElementById('boards');
+       	    variableText.textContent ='Possible chessboards: '+ possibilities[currentIndex];
+            var chessboard = document.getElementById('chessboard');
+            var squares = '';
+
+            for (var i = 63; i >= 0; i--) {
+                var row = Math.floor(i / 8);
+                var col = 7 - (i % 8);
+                var squareColor = (row + col) % 2 !== 0 ? 'white' : 'black';
+		squares += '<div class="square ' + squareColor + '">' + ( row * 8 + col);
+                //squares += '<div class="square ' + squareColor + '">';
+
+                // Check if there are images at the current position
+                var images = piecePositions[currentIndex].find(function(pos) {
+                    return pos.row === row && pos.col === col;
+                });
+
+                // If images are found, add them to the square
+                if (images) {
+                    for (var j = 0; j < images.images.length; j++) {
+			image_path = images.images[j]		
+			if(images.images.length > 1){
+			    image_path = image_path.replace('images/', 'images/O');
+			}
+                        squares += '<img class="piece" src="' + image_path + '">';
+                    }
+                }
+		if(i -3 == check[currentIndex]){
+		    squares += '<img class="piece" src="images/box.png">';
+		}
+
+                squares += '</div>';
+            }
+
+            chessboard.innerHTML = squares;
+        }
+
+        // Handle file upload
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            var file = e.target.files[0];
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                var contents = e.target.result;
+		data = JSON.parse(contents);
+		piecePositions = data['positions']
+		check = data['check']
+		possibilities = data['possibilities']
+
+                // Call the renderChessboard function to render the initial chessboard
+                renderChessboard();
+            };
+
+            reader.readAsText(file);
+        });
+
+        // Handle previous button click
+        document.getElementById('previousBtn').addEventListener('click', function() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                renderChessboard();
+            }
+        });
+
+        // Handle next button click
+        document.getElementById('nextBtn').addEventListener('click', function() {
+            if (currentIndex < piecePositions.length - 1) {
+                currentIndex++;
+                renderChessboard();
+            }
+        });
+    </script>
+</body>
+</html>
